@@ -256,3 +256,6 @@ dialog.k-dlg[open]{animation:k-rise .35s var(--ease-out)}
   .k-hd .mb-sync span{display:none}
 }
 .k-nav a,.k-nav button{flex:none}
+:where(body:not(.legacy),.k-scope) .pcard .th .pmore{position:absolute;top:8px;right:8px;width:34px;height:34px;background:rgba(10,10,10,.72);backdrop-filter:blur(8px);color:var(--ink);opacity:0;transition:opacity .25s,background .2s}
+:where(body:not(.legacy),.k-scope) .pcard:hover .th .pmore,:where(body:not(.legacy),.k-scope) .pcard .th .pmore:focus-visible{opacity:1}
+@media (hover:none){:where(body:not(.legacy),.k-scope) .pcard .th .pmore{opacity:1}}

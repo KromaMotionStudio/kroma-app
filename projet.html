@@ -106,7 +106,7 @@ K.boot({ active: 'projet', stage: 'projet', needProject: true, render: async ({ 
   const bf = field('Brief', 'brief', 'textarea', { ph: 'Intention, ton, livrables, formats, contraintes…' }); bf.classList.add('brief'); f.append(bf);
   const dz = el('div', 'danger-zone'); dz.innerHTML = '<span>Créé le ' + esc(new Date(p.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })) + '</span>';
   const del = el('button', 'btn sm danger'); del.type = 'button'; del.innerHTML = icon('trash-2', 15) + '<span>Supprimer</span>';
-  del.onclick = async () => { if (!await K.confirm('Supprimer « ' + p.name + ' » ?', 'Le projet, ses vidéos de review, son storyboard, ses tâches et ses liens de stockage seront supprimés définitivement. Pour garder une trace, passe-le plutôt en « Archivé ».', 'Supprimer définitivement')) return; try { await K.db.deleteProject(p.id); K.store.set('kroma-last-project', ''); location.href = 'projets.html'; } catch (e) { K.toast(K.errMsg(e)); } };
+  del.onclick = async () => { if (await K.deleteProject(p)) setTimeout(() => location.href = 'projets.html', 600); };
   dz.append(del); f.append(dz);
 
   /* timeline (Gantt des 6 étapes) */

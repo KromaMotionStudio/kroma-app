@@ -253,6 +253,32 @@ K.validateStage = async (p, k) => {
   return next;
 };
 
+/* suppression / archivage d'un projet, accessibles partout */
+K.deleteProject = async (p) => {
+  const nv = (p.videos || []).length;
+  if (!await K.confirm('Supprimer « ' + p.name + ' » ?', 'Le projet sera supprimé définitivement avec ' + (nv ? K.plural(nv, 'vidéo', 'vidéos') + ' de review et leurs commentaires, ' : '') + 'son storyboard, ses tâches et ses liens de stockage. Le dossier du moodboard est conservé. Pour garder une trace, archive-le plutôt.', 'Supprimer définitivement')) return false;
+  try {
+    const paths = (p.videos || []).flatMap(v => (v.versions || []).flatMap(x => [x.path, x.thumb])).filter(Boolean);
+    try { const fr = await K.db.frames(p.id); fr.forEach(f => { if (f.image && !/^https?:/.test(f.image)) paths.push(f.image); }); } catch (e) { }
+    await K.db.deleteProject(p.id);
+    if (paths.length) K.db.removeFiles(paths).catch(() => { });
+    K.state.projects = K.state.projects.filter(x => x.id !== p.id);
+    if (K.lastProjectId() === p.id) store.set('kroma-last-project', '');
+    K.toast('Projet « ' + p.name + ' » supprimé');
+    return true;
+  } catch (e) { K.toast(K.errMsg(e)); return false; }
+};
+K.setStatus = async (p, status) => { try { Object.assign(p, await K.db.updateProject(p.id, { status })); K.toast(status === 'archive' ? 'Projet archivé' : status === 'livre' ? 'Projet marqué comme livré' : 'Projet remis en cours'); return true; } catch (e) { K.toast(K.errMsg(e)); return false; } };
+K.projectMenu = (anchor, p, onDone) => K.menu(anchor, m => {
+  m.append(el('div', 'mh', p.name));
+  K.menuItem(m, 'calendar-range', 'Fiche projet & timeline', () => location.href = 'projet.html?p=' + p.id);
+  if (p.status === 'archive') K.menuItem(m, 'rotate-ccw', 'Désarchiver', async () => { if (await K.setStatus(p, 'en_cours')) (onDone || (() => location.reload()))(); });
+  else K.menuItem(m, 'archive', 'Archiver', async () => { if (await K.setStatus(p, 'archive')) (onDone || (() => location.reload()))(); });
+  m.append(el('div', 'sep'));
+  const d = K.menuItem(m, 'trash-2', 'Supprimer le projet', async () => { if (await K.deleteProject(p)) { if (onDone) onDone(true); else location.href = 'index.html'; } });
+  d.style.color = 'var(--danger)';
+}, 'right');
+
 /* barre d'étape en haut des pages du workflow */
 K.stageHeader = (p, here, opts) => {
   opts = opts || {};
@@ -273,6 +299,7 @@ K.stageHeader = (p, here, opts) => {
   if (opts.compact) who.append(steps); else who.append(lab, h, steps);
   const acts = el('div', 'acts');
   (opts.actions || []).forEach(b => acts.append(b));
+  const more = el('button', 'ibtn'); more.type = 'button'; more.title = 'Plus d\'options'; more.setAttribute('aria-label', 'Options du projet'); more.innerHTML = K.icon('ellipsis', 18); more.style.border = '1px solid var(--line)'; more.onclick = () => K.projectMenu(more, p); acts.append(more);
   if (p.status === 'en_cours' && p.stage === here) {
     const v = el('button', 'btn primary'); v.type = 'button'; v.innerHTML = K.icon('circle-check', 16) + '<span>Valider l\'étape</span>';
     v.onclick = async () => {
@@ -313,6 +340,7 @@ K.projectCard = (p, i, stageKey) => {
   }
   const badge = p.status === 'en_cours' ? '<span class="badge" style="color:' + st.color + '"><span class="dot"></span>' + esc(st.short) + '</span>' : '<span class="badge">' + esc(K.STATUS[p.status] || '') + '</span>';
   th.append(K.h('<div class="tl">' + badge + '</div>'));
+  const mb = el('button', 'ibtn pmore'); mb.type = 'button'; mb.title = 'Options'; mb.setAttribute('aria-label', 'Options du projet ' + p.name); mb.innerHTML = K.icon('ellipsis', 17); mb.onclick = e => { e.preventDefault(); e.stopPropagation(); K.projectMenu(mb, p, () => { const g = a.closest('.pgrid'); a.remove(); K.refreshChrome(); if (g && !g.children.length) location.reload(); }); }; th.append(mb);
   const meta = K.h('<div class="meta"><div style="overflow:hidden"><div class="t">' + esc(p.name) + '</div><div class="s">' + esc(p.client || K.type(p.type).label) + '</div></div></div>');
   const av = el('div', 'k-avs'); (p._people || []).slice(0, 3).forEach(m => { const x = el('span', 'k-av', K.initials(m)); x.title = m; av.append(x); }); meta.append(av);
   const foot = el('div', 'foot');
