@@ -112,7 +112,20 @@ body.show .card{opacity:1;transform:none;transition:opacity .9s var(--ease) calc
 
 /* état vide */
 #empty{height:100vh;height:100svh;display:grid;place-items:center;padding:82px 20px 44px;text-align:center;overflow:hidden}
-#empty .logo{width:150px;height:auto;display:block;margin:0 auto 26px}
+#empty .demo{position:relative;width:150px;aspect-ratio:4/5;margin:0 auto 38px}
+#empty .demo .c{position:absolute;inset:0;border-radius:10px;overflow:hidden;background:#131313;border:1px solid var(--line);box-shadow:0 24px 60px rgba(0,0,0,.55)}
+#empty .demo .b1{transform:translate(-30px,10px) rotate(-9deg) scale(.9);opacity:.3}
+#empty .demo .b2{transform:translate(28px,6px) rotate(8deg) scale(.93);opacity:.45}
+#empty .demo .f{animation:edrop 5.2s var(--ease) infinite}
+#empty .demo .sk{position:absolute;inset:0;background:linear-gradient(100deg,#141414 30%,#1f1f1f 50%,#141414 70%) 0 0/300% 100%;animation:sh 1.6s linear infinite}
+#empty .demo .art{position:absolute;inset:0;background:radial-gradient(120% 80% at 20% 15%,#3a3a36 0,transparent 55%),radial-gradient(90% 70% at 85% 90%,#2a2a27 0,transparent 60%),linear-gradient(160deg,#1c1c1a,#0f0f0f);animation:eart 5.2s var(--ease) infinite}
+#empty .demo .art::after{content:"";position:absolute;left:12px;right:40px;bottom:14px;height:6px;border-radius:3px;background:rgba(237,237,234,.18);box-shadow:0 -12px 0 -1px rgba(237,237,234,.1)}
+#empty .demo .tl{position:absolute;top:8px;right:8px;display:flex;gap:4px;animation:etools 5.2s var(--ease) infinite}
+#empty .demo .tl i{width:18px;height:18px;border-radius:50%;background:rgba(11,11,11,.6);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px)}
+@keyframes edrop{0%{transform:translateY(-70px) rotate(-7deg);opacity:0}18%{transform:none;opacity:1}82%{transform:none;opacity:1}100%{transform:translateY(14px) scale(.97);opacity:0}}
+@keyframes eart{0%,26%{clip-path:inset(100% 0 0 0)}44%,100%{clip-path:inset(0 0 0 0)}}
+@keyframes etools{0%,50%{opacity:0;transform:translateY(-4px)}60%,80%{opacity:1;transform:none}90%,100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){#empty .demo .f,#empty .demo .art,#empty .demo .tl,#empty .demo .sk{animation:none}#empty .demo .tl{opacity:1}}
 #empty .l1{font-size:14px}
 #empty .l2{color:var(--mute);max-width:38ch;margin:8px auto 0;line-height:1.5}
 #empty .l3{color:var(--mute);margin-top:22px;font-size:12px}
@@ -217,7 +230,7 @@ dialog[open]{animation:dlg .6s var(--ease)}
 <div class="fempty" id="fempty" hidden><p class="a">Ce dossier est vide.</p><p>Colle un lien : il sera rangé ici. Tu peux aussi glisser une carte sur le nom d'un dossier, ou utiliser l'icône dossier d'une carte.</p></div>
 <section id="empty" hidden>
   <div>
-    <svg class="logo" viewBox="0 0 1807 331" aria-hidden="true"><g fill="currentColor"><path d="M185.848 208.489C177.357 208.489 167.294 208.961 155.659 209.904C144.339 210.848 132.861 212.105 121.226 213.678C109.905 214.936 99.0559 216.351 88.6786 217.923C78.6158 219.181 70.7542 220.124 65.0939 220.753C63.2071 221.382 61.3203 221.854 59.4335 222.168C57.5468 222.483 56.1317 222.64 55.1883 222.64V330.186H0V0H55.1883L50.4713 148.112L54.7166 151.886V152.357L291.036 4.24525V66.9807L87.2635 195.753C93.5528 193.552 100.785 191.036 108.961 188.206C117.452 185.376 125.942 182.703 134.433 180.187C143.238 177.672 152.043 175.47 160.848 173.584C169.967 171.697 178.301 170.282 185.848 169.338C191.508 168.71 198.269 168.238 206.131 167.923C213.992 167.609 222.168 168.081 230.659 169.338C239.464 170.282 247.954 172.326 256.13 175.47C264.306 178.615 271.696 183.489 278.3 190.093C284.904 196.382 290.249 204.873 294.338 215.565C298.426 225.942 300.47 238.835 300.47 254.243V330.186H245.281V293.866C245.281 289.778 245.281 285.69 245.281 281.602C245.281 277.514 245.281 273.426 245.281 269.338C244.652 259.589 243.08 250.942 240.564 243.395C238.363 235.847 234.747 229.558 229.715 224.527C224.684 219.495 218.552 215.565 211.319 212.734C204.087 209.904 195.596 208.489 185.848 208.489Z"/><path d="M495.39 0C499.478 0 505.453 0.15723 513.314 0.471689C521.49 0.471689 530.453 1.25786 540.201 2.83019C549.949 4.08803 559.855 6.60373 569.918 10.3773C579.981 14.1509 589.1 19.654 597.276 26.8866C605.767 33.8048 612.685 42.9242 618.031 54.2449C623.377 65.2511 626.049 79.0875 626.049 95.7541C626.049 109.276 623.534 120.597 618.502 129.716C613.785 138.521 608.125 145.754 601.521 151.414C594.918 156.76 587.999 160.691 580.767 163.206C573.534 165.408 567.559 166.823 562.842 167.452L567.559 172.169L626.049 171.225V330.186H570.861V218.395H380.768V330.186H325.58V0H495.39ZM380.296 168.867H488.786C496.019 168.867 504.352 168.238 513.786 166.98C523.534 165.722 532.654 162.892 541.144 158.489C549.949 153.773 557.182 147.169 562.842 138.678C568.817 130.188 571.805 118.867 571.805 104.716C571.805 93.3956 569.761 84.2762 565.673 77.358C561.584 70.4398 555.924 65.0939 548.692 61.3203C541.773 57.5468 533.597 55.0311 524.163 53.7732C515.044 52.2009 505.296 51.4147 494.918 51.4147H380.296V168.867Z"/><path d="M1065.39 330.186H1010.2V0H1123.4L1227.18 320.281H1234.25L1342.27 0H1452.65V330.186H1397.46V9.43392H1394.16L1288.5 330.186H1173.88L1068.69 9.43392H1065.39V330.186Z"/><path d="M1806.55 330.186H1755.14L1720.23 238.678H1565.04L1530.61 330.186H1479.2L1593.82 0H1691.93L1806.55 330.186ZM1580.61 189.621H1705.14L1645.7 8.9622H1639.57L1580.61 189.621Z"/><rect x="652.191" y="0.791016" width="329.394" height="329.394"/></g></svg>
+    <div class="demo" aria-hidden="true"><i class="c b1"></i><i class="c b2"></i><div class="c f"><i class="sk"></i><i class="art"></i><span class="tl"><i></i><i></i></span></div></div>
     <span class="rv l1"><span style="--d:.25s">La planche est vide.</span></span>
     <span class="rv l2"><span style="--d:.35s">Colle un lien dans le dock en bas, fais Cmd+V n'importe où, ou glisse un lien sur la page.</span></span>
     <span class="rv l3"><span style="--d:.45s">Pinterest · Behance · Vimeo · YouTube · Dribbble · mp4 · gif · jpg</span></span>
@@ -603,7 +616,7 @@ const reveal=()=>document.body.classList.add('show');
 const fly=$('#fly'),ph=$('#ph');
 if(REDUCED){intro.remove();fly.remove();reveal();empty.classList.add('go')}
 else{
-  const target=empty.hidden?$('.top .logo'):$('#empty .logo');target.classList.add('wait');
+  const target=empty.hidden?$('.top .logo'):$('.top .logo');target.classList.add('wait');
   const place=()=>{const r=ph.getBoundingClientRect();fly.style.width=r.width+'px';fly.style.transform='translate('+r.left+'px,'+r.top+'px)'};
   place();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(!moving)place()});
   requestAnimationFrame(()=>requestAnimationFrame(()=>{intro.classList.add('go');fly.classList.add('go')}));
