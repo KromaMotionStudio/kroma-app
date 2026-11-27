@@ -281,6 +281,22 @@ body{font-size:14px;line-height:1.5}
 .dk-x{display:none!important}
 @media (max-width:760px){.dock{width:calc(100vw - 20px)}.dock .url{font-size:16px}}
 /* ===== fin dock ===== */
+
+/* ===== Dossiers : parcours simplifié ===== */
+.fhead .lab{font-size:13px}
+.crumb{border:0;background:none;padding:0;color:var(--mute);cursor:pointer;transition:color .2s}
+.crumb:hover{color:var(--ink)}
+.crsep{color:#444}
+button.br.hint{display:block;border:0;background:none;padding:0;color:var(--mute);cursor:pointer;text-align:left;font:inherit;font-size:15px;transition:color .2s}
+button.br.hint:hover{color:var(--ink)}
+.fhead .tb.danger:hover{color:#ff6b5e}
+.fadd{color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.fadd:hover{background:rgba(255,255,255,.07)}
+#pop .pnew{margin-top:4px;color:var(--mute);border-top:1px solid var(--line);border-radius:0 0 8px 8px}
+#pop .pnew:hover{color:var(--ink)}
+#pop .ck{width:16px;height:16px;border-radius:5px;border-color:#444;display:grid;place-items:center}
+#pop .ck.y::after{content:"";width:7px;height:4px;border:solid #0b0b0b;border-width:0 0 1.6px 1.6px;transform:translateY(-1px) rotate(-45deg)}
+/* ===== fin dossiers ===== */
 </style>
 </head>
 <body>
@@ -303,7 +319,7 @@ body{font-size:14px;line-height:1.5}
 <section class="fhead" id="fhead" hidden></section>
 
 <main id="board" aria-label="Planche d'inspirations"></main>
-<div class="fempty" id="fempty" hidden><p class="a">Ce dossier est vide.</p><p>Colle un lien : il sera rangé ici. Tu peux aussi glisser une carte sur le nom d'un dossier, ou utiliser l'icône dossier d'une carte.</p></div>
+<div class="fempty" id="fempty" hidden><p class="a">Ce dossier est vide.</p><p>Colle un lien dans la barre en bas : il sera rangé ici. Depuis Tout, tu peux aussi utiliser l'icône dossier d'une card.</p></div>
 <section id="empty" hidden>
   <div>
     <div class="demo" aria-hidden="true"><i class="c b1"></i><i class="c b2"></i><div class="c f"><i class="sk"></i><i class="art"></i><span class="tl"><i></i><i></i></span></div></div>
@@ -339,9 +355,9 @@ body{font-size:14px;line-height:1.5}
 <dialog id="fd"><form class="ed" method="dialog">
   <h2 id="fdt">Dossier</h2>
   <label>Nom du dossier<input id="fdn" type="text" placeholder="Ex. Campagne printemps"></label>
-  <label>Client<input id="fdc" type="text" placeholder="Ex. Shotgun"></label>
-  <label>Brief, notes<textarea id="fdb" rows="5" placeholder="Intention, ton, contraintes, deadline…"></textarea></label>
-  <div class="row2"><button class="tb" value="cancel" type="submit">Annuler</button><button class="go-btn" value="ok" type="submit">Enregistrer</button></div>
+  <label>Client<input id="fdc" type="text" placeholder="Facultatif · ex. Shotgun"></label>
+  <label>Brief, notes<textarea id="fdb" rows="5" placeholder="Facultatif · intention, ton, contraintes, deadline…"></textarea></label>
+  <div class="row2"><button class="tb" value="cancel" type="submit">Annuler</button><button class="go-btn" id="fdok" value="ok" type="submit">Enregistrer</button></div>
 </form></dialog>
 <div id="pop" hidden></div>
 <dialog id="lb"><button class="x" type="button" id="lbx" aria-label="Fermer">×</button><div class="lbw"><div class="lbm" id="lbm"></div><div class="lbi" id="lbi"></div></div></dialog>
@@ -379,6 +395,7 @@ const I={
  edit:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.5 2.5l3 3L5 14H2v-3z"/></svg>',
  del:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>',
  spark:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 1.5c.4 3.3 2.2 5.1 6.5 6.5-4.3 1.4-6.1 3.2-6.5 6.5-.4-3.3-2.2-5.1-6.5-6.5C5.8 6.6 7.6 4.8 8 1.5z"/></svg>',
+ out:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10"/></svg>',
  folder:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.5 3.5h4.2l1.5 1.6h7.3v7.4h-13z"/></svg>',
  play:'<svg viewBox="0 0 10 10"><path d="M1 0l9 5-9 5z" fill="currentColor"/></svg>'
 };
@@ -484,7 +501,7 @@ function fill(c,it){
   if(it.kind==='video'||it.kind==='youtube'||it.kind==='vimeo'){const k=el('span','kind');k.innerHTML=I.play;c.append(k)}
   if(it.kind==='video')c.append(el('span','pg'));
   const a=el('a','hit');a.href=okUrl(it.url)||'#';a.target='_blank';a.rel='noopener noreferrer';a.setAttribute('aria-label',(it.title||host(it.url))+', ouvrir la source');
-  const tools=el('div','tools');tools.append(btn('spark','Écrire la description avec l\'IA',()=>{if(!ai.key)openAi();else describe(it).catch(()=>{})}),btn('folder','Ranger dans un dossier',b=>openPop(it,b)),btn('expand','Agrandir',()=>openLb(it)),btn('edit','Modifier la description',()=>openEdit(it)),btn('del','Supprimer',()=>remove(it)));
+  const tools=el('div','tools');tools.append(btn('spark','Écrire la description avec l\'IA',()=>{if(!ai.key)openAi();else describe(it).catch(()=>{})}),btn('folder','Ajouter à un dossier',b=>openPop(it,b)),btn('expand','Agrandir',()=>openLb(it)),btn('edit','Modifier la description',()=>openEdit(it)),btn('del','Supprimer',()=>remove(it)));
   c.append(buildOv(it),a,tools)}
 function buildOv(it){
   const ov=el('div','ov');const s=el('div','src');s.append(el('span','sq'),document.createTextNode(it.source||host(it.url)));ov.append(s);
@@ -494,7 +511,7 @@ function buildOv(it){
   else if(!it.title){const d=el('div','d hint');d.textContent=ai.key?'Pas encore de description.':'Pas encore de description. Le crayon permet d\'en écrire une.';ov.append(d)}
   return ov}
 function refreshOv(it){const c=cards.get(it.id);const o=c&&c.querySelector('.ov');if(o)o.replaceWith(buildOv(it))}
-function card(it,fresh){let c=cards.get(it.id);if(!c){c=el('div','card'+(fresh?' new':''));cards.set(it.id,c);c.addEventListener('mouseenter',()=>{enter(c,it);const d=c.querySelector('[data-k=del]');if(d){const l=cur==='all'?'Supprimer':'Retirer du dossier';d.title=l;d.setAttribute('aria-label',l)}});c.addEventListener('dragstart',e=>{dragId=it.id;try{e.dataTransfer.setData('application/x-kroma',it.id);e.dataTransfer.effectAllowed='copyMove'}catch(x){}document.body.classList.add('dragcard')});c.addEventListener('dragend',()=>{dragId=null;document.body.classList.remove('dragcard');document.querySelectorAll('.fp.drop').forEach(p=>p.classList.remove('drop'))});c.addEventListener('mouseleave',()=>leave(c));fill(c,it)}return c}
+function card(it,fresh){let c=cards.get(it.id);if(!c){c=el('div','card'+(fresh?' new':''));cards.set(it.id,c);c.addEventListener('mouseenter',()=>{enter(c,it);const d=c.querySelector('[data-k=del]');if(d){const l=cur==='all'?'Supprimer':'Retirer du dossier';d.title=l;d.setAttribute('aria-label',l);d.innerHTML=I[cur==='all'?'del':'out']}});c.addEventListener('dragstart',e=>{dragId=it.id;try{e.dataTransfer.setData('application/x-kroma',it.id);e.dataTransfer.effectAllowed='copyMove'}catch(x){}document.body.classList.add('dragcard')});c.addEventListener('dragend',()=>{dragId=null;document.body.classList.remove('dragcard');document.querySelectorAll('.fp.drop').forEach(p=>p.classList.remove('drop'))});c.addEventListener('mouseleave',()=>leave(c));fill(c,it)}return c}
 function refresh(it){const c=cards.get(it.id);if(c)fill(c,it);layout()}
 
 /* ---------- mise en page ---------- */
@@ -595,31 +612,33 @@ function renderFbar(){const b=$('#fbar');b.textContent='';
       p.addEventListener('drop',e=>{if(!dragId)return;e.preventDefault();e.stopPropagation();p.classList.remove('drop');const it=items.find(i=>i.id===dragId);if(it){if(inF(it,id))toast('Déjà dans '+name);else addTo(it,id)}})}
     return p};
   b.append(mk('all','Tout'));folders.forEach(f=>b.append(mk(f.id,f.name)));
-  const nb=el('button','fp fadd');nb.type='button';nb.textContent='+ Nouveau dossier';nb.onclick=()=>{const i=el('input','fnew');i.placeholder='Nom du dossier';i.setAttribute('aria-label','Nom du nouveau dossier');nb.replaceWith(i);i.focus();let done=false;
-    const ok=()=>{if(done)return;done=true;const v=i.value.trim();if(v){const f=createFolder(v);openFolder(f.id);toast('Dossier créé · colle des liens pour le remplir')}else renderFbar()};
-    i.onkeydown=e=>{if(e.key==='Enter')ok();if(e.key==='Escape'){done=true;renderFbar()}};i.onblur=ok};
+  const nb=el('button','fp fadd');nb.type='button';nb.textContent='+ Nouveau dossier';nb.onclick=()=>openFd(null);
   b.append(nb);updCounts();const on=b.querySelector('.fp.on');if(on)on.scrollIntoView({block:'nearest',inline:'nearest'})}
 function renderHead(){const h=$('#fhead'),f=curF();document.body.classList.toggle('infolder',!!f);h.hidden=!f;h.textContent='';
   if(!f)return;
-  const L=el('div');const lab=el('div','lab');lab.append(el('span','sq'),document.createTextNode('Dossier'));const t=el('h1');t.textContent=f.name;const m=el('div','fm');m.id='fmeta';m.textContent=headMeta(f);
-  const br=el('p','br'+(f.brief?'':' hint'));br.textContent=f.brief||'Pas encore de brief. « Modifier » permet d\'ajouter le client, l\'intention, le ton, la deadline…';L.append(lab,t,m,br);
+  const L=el('div');const lab=el('div','lab');const back=el('button','crumb');back.type='button';back.textContent='← Tout';back.onclick=()=>openFolder('all');const sl=el('span','crsep');sl.textContent='/';const cn=el('span');cn.textContent=f.name;lab.append(back,sl,cn);const t=el('h1');t.textContent=f.name;const m=el('div','fm');m.id='fmeta';m.textContent=headMeta(f);
+  const br=el(f.brief?'p':'button','br'+(f.brief?'':' hint'));br.textContent=f.brief||'+ Ajouter un client et un brief';if(!f.brief){br.type='button';br.onclick=()=>openFd(f)}L.append(lab,t,m,br);
   const A=el('div','acts');const tb=(txt,fn)=>{const b=el('button','tb');b.type='button';b.textContent=txt;b.onclick=fn;return b};
-  A.append(tb('Modifier',()=>openFd(f)),tb('Exporter le dossier',()=>download({kroma:1,folders:[f],items:items.filter(i=>inF(i,f.id)).map(({loading,...r})=>r)},'kroma-'+slug(f.name)+'-'+day()+'.json')),tb('Supprimer le dossier',()=>delFolder(f)));
+  const del=tb('Supprimer',()=>delFolder(f));del.classList.add('danger');A.append(tb('Modifier',()=>openFd(f)),del);
   h.append(L,A)}
-function renderAll(){renderFbar();renderHead();layout()}
+function renderAll(){renderFbar();renderHead();const f=curF();$('#url').placeholder=f?'Coller un lien dans « '+f.name+' »…':'Coller un lien…';layout()}
 function openFolder(id){cur=id;saveF();$('#q').value='';closePop();renderAll();scrollTo({top:0})}
-let fdEdit=null;
-function openFd(f){fdEdit=f;$('#fdt').textContent='Modifier le dossier';$('#fdn').value=f.name;$('#fdc').value=f.client||'';$('#fdb').value=f.brief||'';$('#fd').showModal();$('#fdn').focus()}
-$('#fd').addEventListener('close',()=>{const f=fdEdit;fdEdit=null;if($('#fd').returnValue!=='ok'||!f)return;f.name=clean($('#fdn').value).slice(0,60)||f.name;f.client=clean($('#fdc').value);f.brief=$('#fdb').value.trim();saveF();renderFbar();renderHead()});
+let fdEdit=null,fdNew=false,fdFor=null;
+function openFd(f,forIt){fdEdit=f;fdNew=!f;fdFor=forIt||null;closePop();$('#fdt').textContent=f?'Modifier le dossier':'Nouveau dossier';$('#fdok').textContent=f?'Enregistrer':'Créer le dossier';$('#fdn').value=f?f.name:'';$('#fdc').value=f?f.client||'':'';$('#fdb').value=f?f.brief||'':'';$('#fd').returnValue='';$('#fd').showModal();$('#fdn').focus()}
+$('#fd').addEventListener('close',()=>{const f=fdEdit,isNew=fdNew,forIt=fdFor;fdEdit=null;fdNew=false;fdFor=null;if($('#fd').returnValue!=='ok')return;
+  if(isNew){const name=clean($('#fdn').value);if(!name){toast('Donne un nom au dossier');return}const nf=createFolder(name);nf.client=clean($('#fdc').value);nf.brief=$('#fdb').value.trim();saveF();
+    if(forIt){if(!inF(forIt,nf.id))(forIt.f=forIt.f||[]).push(nf.id);save();renderFbar();layout();toast('Ajouté au nouveau dossier '+nf.name,{label:'Ouvrir',fn:()=>openFolder(nf.id)})}
+    else{openFolder(nf.id);toast('Dossier créé · colle un lien en bas pour le remplir')}return}
+  if(!f)return;f.name=clean($('#fdn').value).slice(0,60)||f.name;f.client=clean($('#fdc').value);f.brief=$('#fdb').value.trim();saveF();renderFbar();renderHead()});
+$('#fdn').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();$('#fd').close('ok')}});
 function delFolder(f){const i=folders.indexOf(f);if(i<0)return;const members=items.filter(x=>inF(x,f.id));folders.splice(i,1);members.forEach(x=>x.f=x.f.filter(y=>y!==f.id));cur='all';save();saveF();renderAll();
-  toast('Dossier supprimé. Ses références restent dans Tout.',{label:'Annuler',fn:()=>{folders.splice(Math.min(i,folders.length),0,f);members.forEach(x=>{if(!inF(x,f.id))(x.f=x.f||[]).push(f.id)});cur=f.id;save();saveF();renderAll()}})}
+  toast('Dossier « '+f.name+' » supprimé · ses références restent dans Tout',{label:'Annuler',fn:()=>{folders.splice(Math.min(i,folders.length),0,f);members.forEach(x=>{if(!inF(x,f.id))(x.f=x.f||[]).push(f.id)});cur=f.id;save();saveF();renderAll()}})}
 function closePop(){$('#pop').hidden=true}
-function openPop(it,anchor){const P=$('#pop');P.textContent='';const h=el('div','ph2');h.textContent='Ranger dans';P.append(h);
+function openPop(it,anchor){const P=$('#pop');P.textContent='';const h=el('div','ph2');h.textContent=folders.length?'Ajouter à un dossier':'Aucun dossier pour l\'instant';P.append(h);
   folders.forEach(f=>{const b=el('button','po');b.type='button';const t=el('span');t.textContent=f.name;const m=el('span','ck'+(inF(it,f.id)?' y':''));b.append(t,m);
-    b.onclick=()=>{if(inF(it,f.id))it.f=it.f.filter(x=>x!==f.id);else(it.f=it.f||[]).push(f.id);m.classList.toggle('y',inF(it,f.id));save();layout()};P.append(b)});
-  const inp=el('input','pin');inp.placeholder=folders.length?'Nouveau dossier…':'Nom du premier dossier…';inp.setAttribute('aria-label','Nouveau dossier');
-  inp.onkeydown=e=>{if(e.key==='Enter'&&inp.value.trim()){const f=createFolder(inp.value);(it.f=it.f||[]).push(f.id);save();closePop();renderFbar();layout();toast('Rangé dans '+f.name)}if(e.key==='Escape')closePop()};P.append(inp);
-  P.hidden=false;const r=anchor.getBoundingClientRect(),w=P.offsetWidth,hh=P.offsetHeight;P.style.left=Math.min(innerWidth-w-8,Math.max(8,r.right-w))+'px';P.style.top=(r.bottom+6+hh>innerHeight-8?Math.max(8,r.top-hh-6):r.bottom+6)+'px';if(!folders.length)inp.focus()}
+    b.onclick=()=>{const was=inF(it,f.id);if(was)it.f=it.f.filter(x=>x!==f.id);else(it.f=it.f||[]).push(f.id);m.classList.toggle('y',!was);save();layout();toast(was?'Retiré de '+f.name:'Ajouté à '+f.name)};P.append(b)});
+  const nb=el('button','po pnew');nb.type='button';nb.textContent='+ Nouveau dossier';nb.onclick=()=>openFd(null,it);P.append(nb);
+  P.hidden=false;const r=anchor.getBoundingClientRect(),w=P.offsetWidth,hh=P.offsetHeight;P.style.left=Math.min(innerWidth-w-8,Math.max(8,r.right-w))+'px';P.style.top=(r.bottom+6+hh>innerHeight-8?Math.max(8,r.top-hh-6):r.bottom+6)+'px'}
 document.addEventListener('mousedown',e=>{if(!$('#pop').hidden&&!e.target.closest('#pop')&&!e.target.closest('[data-k=folder]'))closePop()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closePop()});
 addEventListener('scroll',closePop,{passive:true});
