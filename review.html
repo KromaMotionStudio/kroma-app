@@ -206,6 +206,8 @@ body.in-shell .wrap{padding:28px 32px 80px}
 body.in-shell .player{inset:var(--hdh) 0 0 var(--mainx)}
 body.in-shell #toast{top:72px;left:calc(50% + var(--mainx) / 2)}
 body.in-shell .wrap>.k-stage{margin-bottom:22px}
+@media (max-width:1280px){body.in-shell .player{grid-template-columns:minmax(0,1fr) 330px}}
+@media (max-width:1180px){body.in-shell .player{position:static;display:block;padding-top:0;animation:none}body.in-shell .stage{height:min(52vw,62vh);min-height:220px}body.in-shell .side{border-left:0;border-top:1px solid var(--line);display:block}body.in-shell .list{max-height:none}}
 @media (max-width:900px){body.in-shell .player{padding-top:0}body.in-shell .wrap{padding:20px 16px 80px}}
 </style>
 </head>

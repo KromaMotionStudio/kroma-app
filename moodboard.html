@@ -303,6 +303,9 @@ button.br.hint:hover{color:var(--ink)}
 /* ===== fin dossiers ===== */
 
 /* ===== intégration dans le shell Kroma v2 ===== */
+.lnk>b,.lnk>span{transition:opacity .3s var(--ease)}
+.card:hover .lnk>b,.card:focus-within .lnk>b,.card:hover .lnk>span,.card:focus-within .lnk>span{opacity:0}
+#k-toast{bottom:96px}
 .k-view.mb{max-width:none;padding:0 0 120px}
 .k-view.mb>.k-stage{padding:24px 32px 0;margin-bottom:8px}
 .fbar{position:sticky;top:var(--hdh);left:auto;right:auto;padding:0 24px}

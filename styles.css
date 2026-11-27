@@ -237,3 +237,22 @@ dialog.k-dlg[open]{animation:k-rise .35s var(--ease-out)}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01s!important;transition-duration:.01s!important}}
 .gridhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}
+
+/* ===== correctifs de mise en page ===== */
+.k-hd .crumbs{flex:1 1 auto;min-width:0}
+.k-hd .crumbs>a,.k-hd .crumbs>span{flex:none;white-space:nowrap}
+.k-hd .crumbs>a:not(:first-child){max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.k-hd .crumbs>b{flex:0 1 auto;min-width:0;white-space:nowrap}
+.k-hd .sp{flex:0 0 8px}
+.k-hd .pill,.k-hd .ibtn,.k-hd .clk,.k-hd .mb-sync{flex:none}
+.k-sb{overflow-y:auto;scrollbar-width:none}
+.k-sb::-webkit-scrollbar{display:none}
+.k-recents{min-height:72px}
+#k-toast{left:calc(50% + var(--mainx) / 2)}
+@media (max-width:1280px){.k-hd .clk{display:none}}
+@media (max-width:1100px){.k-hd .pill .tx{display:none}}
+@media (max-width:900px){
+  .k-hd .crumbs>a,.k-hd .crumbs>span{display:none}
+  .k-hd .mb-sync span{display:none}
+}
+.k-nav a,.k-nav button{flex:none}
