@@ -265,6 +265,22 @@ body{font-size:14px;line-height:1.5}
 #toast button{padding:7px 14px}
 @media (max-width:760px){.top{padding:0 16px}.fbar{padding:0 12px}.fhead{padding:140px 16px 28px}.dock .url,.dock .q{font-size:16px}}
 /* ===== fin système typo ===== */
+
+/* ===== Dock (barre du bas) ===== */
+.dock{gap:6px;padding:6px;width:min(680px,calc(100vw - 24px));max-width:none;background:rgba(20,20,20,.82)}
+.dock form{flex:1;min-width:0;display:flex;align-items:center;gap:6px}
+.dock .url{flex:1;width:auto;min-width:0;height:40px;padding:0 8px;font-size:14px}
+.dk-ic,.dk-go{flex:none;width:40px;height:40px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;transition:background .2s,color .2s,transform .3s var(--ease)}
+.dk-ic svg,.dk-go svg{width:16px;height:16px}
+.dk-ic{background:#262626;color:var(--ink)}
+.dk-ic:hover{background:#333}
+.dk-go{background:#2a2a2a;color:#77776f}
+.dock form:has(.url:not(:placeholder-shown)) .dk-go{background:var(--ink);color:#0b0b0b}
+.dk-go:hover{background:#fff;color:#0b0b0b}
+.dk-ic:active,.dk-go:active{transform:scale(.92)}
+.dk-x{display:none!important}
+@media (max-width:760px){.dock{width:calc(100vw - 20px)}.dock .url{font-size:16px}}
+/* ===== fin dock ===== */
 </style>
 </head>
 <body>
@@ -298,19 +314,10 @@ body{font-size:14px;line-height:1.5}
 </section>
 
 <nav class="dock" aria-label="Outils">
-  <form id="add" autocomplete="off">
-    <input class="url" id="url" type="text" placeholder="Coller un lien…" aria-label="Lien à ajouter">
-    <button class="go-btn" type="submit">Ajouter</button>
-  </form>
-  <span class="sep"></span>
-  <input class="q" id="q" type="search" placeholder="Chercher" aria-label="Rechercher dans la planche">
-  <span class="sep"></span>
-  <div class="sz"><button class="tb" id="szm" type="button" aria-label="Vignettes plus petites">−</button><button class="tb" id="szp" type="button" aria-label="Vignettes plus grandes">+</button></div>
-  <span class="sep"></span>
-  <button class="tb" id="ai" type="button">IA</button>
-  <button class="tb" id="exp" type="button">Exporter</button>
-  <button class="tb" id="imp" type="button">Importer</button>
+  <button class="dk-ic" id="imp" type="button" aria-label="Importer" title="Importer"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></button>
+  <form id="add" autocomplete="off"><input class="url" id="url" type="text" placeholder="Coller un lien…" aria-label="Lien à ajouter"><button class="dk-go" type="submit" aria-label="Ajouter" title="Ajouter"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button></form>
   <input id="impf" type="file" accept="application/json,.json" hidden>
+  <div class="dk-x" hidden><input class="q" id="q" type="search" placeholder="Chercher" aria-label="Rechercher dans la planche"><div class="sz"><button class="tb" id="szm" type="button" aria-label="Vignettes plus petites">−</button><button class="tb" id="szp" type="button" aria-label="Vignettes plus grandes">+</button></div><button class="tb" id="ai" type="button">IA</button><button class="tb" id="exp" type="button">Exporter</button></div>
 </nav>
 
 <div id="drop"><span>Lâche tes liens ici</span></div>
