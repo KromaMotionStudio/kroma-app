@@ -103,7 +103,12 @@ K.sb = sb;
 
 function makeDb() {
   const q = async p => { const { data, error } = await p; if (error) throw error; return data; };
-  const PSEL = '*,videos(id,title,status,status_changed_at,created_at,versions(id,n,thumb,path,created_at))';
+  const PSEL_V2 = '*,videos(id,title,status,status_changed_at,created_at,versions(id,n,thumb,path,created_at))';
+  const PSEL_V1 = '*,videos(id,title,status,created_at,versions(id,n,thumb,path,created_at))';
+  let PSEL = PSEL_V2;
+  /* base pas encore migrée : on relit sans les colonnes v2 au lieu de planter */
+  const old = e => e && (e.code === '42703' || e.code === 'PGRST204' || /does not exist|could not find/i.test(e.message || ''));
+  const qp = async mk => { try { return await q(mk()); } catch (e) { if (PSEL === PSEL_V2 && old(e)) { PSEL = PSEL_V1; return q(mk()); } throw e; } };
   return {
     ready: !!sb,
     async session() { const { data } = await sb.auth.getSession(); return data.session; },
@@ -115,8 +120,8 @@ function makeDb() {
     async isStudio() { const { data, error } = await sb.rpc('is_studio'); if (error) throw error; return !!data; },
     members: () => q(sb.from('studio_members').select('*')),
     async schemaOk() { const { error } = await sb.from('projects').select('stage,stage_dates').limit(1); return !error; },
-    projects: () => q(sb.from('projects').select(PSEL).order('created_at', { ascending: false })),
-    project: id => q(sb.from('projects').select(PSEL).eq('id', id).single()),
+    projects: () => qp(() => sb.from('projects').select(PSEL).order('created_at', { ascending: false })),
+    project: id => qp(() => sb.from('projects').select(PSEL).eq('id', id).single()),
     createProject: p => q(sb.from('projects').insert(p).select(PSEL).single()),
     updateProject: (id, p) => q(sb.from('projects').update(p).eq('id', id).select(PSEL).single()),
     deleteProject: id => q(sb.from('projects').delete().eq('id', id)),
