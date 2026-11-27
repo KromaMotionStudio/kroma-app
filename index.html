@@ -209,6 +209,62 @@ dialog[open]{animation:dlg .6s var(--ease)}
 
 @media (max-width:760px){.top{grid-template-columns:auto auto 1fr;gap:10px}.top .meta>span:last-child{display:none}.dock{flex-wrap:wrap;justify-content:center;border-radius:22px;width:calc(100vw - 20px)}.dock form{flex:1 1 100%}.dock .url{flex:1;width:auto}.dock .sep{display:none}#board{padding-bottom:170px}.dock .url,.dock .q{font-size:16px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01s!important;animation-duration:.01s!important;transition-delay:0s!important}#intro,#fly{display:none}}
+
+/* ===== Système typo & espacements =====
+   Échelle : 12.5 légende · 14 base/UI · 15 lecture · 17–19 titres · 32–48 display
+   Hauteurs de contrôle : 34 (pills) · 42 (dock) · header 56 · barre dossiers 52 */
+body{font-size:14px;line-height:1.5}
+.top{height:56px;padding:0 24px}
+.top .logo{height:13px}
+.nav a{padding:7px 14px}
+.top .meta{gap:22px;font-size:13px}
+.fbar{top:56px;height:52px;padding:0 18px;gap:6px}
+.fp{height:34px;padding:0 15px;gap:8px}
+.fp .n{font-size:12px}
+.fnew{height:34px;padding:0 15px;font-size:13.5px}
+#board{padding-top:124px}
+.fhead{padding:148px 24px 36px;gap:20px 40px}
+.fhead .lab{font-size:12.5px;gap:8px;margin-bottom:14px}
+.fhead h1{font-size:clamp(32px,3.6vw,48px);line-height:1.1;letter-spacing:-.03em}
+.fhead .fm{font-size:13px;margin-top:14px}
+.fhead .br{font-size:15px;line-height:1.65;margin-top:16px}
+.fhead .acts{gap:6px}
+.fempty{font-size:15px;line-height:1.65;padding:56px 24px 180px}
+.fempty .a{font-size:18px;margin-bottom:10px}
+.ov{padding:18px;gap:6px}
+.ov .src{font-size:12.5px;gap:8px}
+.ov .t{font-size:15px;line-height:1.3}
+.ov .d{font-size:13px;line-height:1.5}
+.lnk{padding:22px}
+.lnk b{font-size:19px;line-height:1.25}
+.card.loading{font-size:12.5px}
+#pop{padding:8px}
+#pop .ph2{font-size:12.5px;padding:8px 12px}
+#pop .po{height:38px;padding:0 12px}
+#pop .pin{height:38px;padding:0 12px;font-size:14px}
+.dock{padding:5px;gap:4px}
+.dock .url{height:42px;padding:0 18px;font-size:14px}
+.dock .q{height:42px;padding:0 12px;font-size:14px}
+.go-btn{height:42px;padding:0 20px}
+.tb{height:42px;padding:0 12px}
+.sep{height:18px;margin:0 8px}
+#drop{font-size:15px}
+#drop span{padding:14px 22px}
+.ed{padding:28px;gap:18px}
+.ed h2{font-size:18px;line-height:1.3}
+.ed label{font-size:12.5px;gap:8px}
+.ed .note{font-size:13.5px;line-height:1.6}
+.ed label.chk{font-size:14px;gap:10px}
+.row2{gap:10px}
+.quota{font-size:12.5px}
+.lbi{padding:28px;gap:12px}
+.lbi .src{font-size:12.5px;gap:8px}
+.lbi .t{font-size:19px;line-height:1.3}
+.lbi .d{font-size:14px;line-height:1.65}
+#toast{top:120px;font-size:13.5px;padding:10px 10px 10px 18px;gap:14px}
+#toast button{padding:7px 14px}
+@media (max-width:760px){.top{padding:0 16px}.fbar{padding:0 12px}.fhead{padding:140px 16px 28px}.dock .url,.dock .q{font-size:16px}}
+/* ===== fin système typo ===== */
 </style>
 </head>
 <body>
