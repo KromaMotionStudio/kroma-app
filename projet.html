@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Kroma — Projet & timeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.js"></script>
+<script src="app.js"></script>
+<style>
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:28px}
+.stat{padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+.stat b{font-size:22px;font-weight:600;letter-spacing:-.02em}
+.stat.late b{color:var(--danger)}
+.cols{display:flex;flex-direction:column;gap:24px}
+.fiche{padding:24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 18px}
+.fiche>.hd,.fiche>.full,.fiche>.danger-zone{grid-column:1/-1}
+.fiche>.brief{grid-column:span 2;grid-row:span 3}
+.fiche>.brief textarea{height:100%;min-height:200px}
+.fiche .hd{display:flex;justify-content:space-between;align-items:center}
+.saved{font-size:12px;color:var(--dim);transition:opacity .3s}
+.drive{display:flex;gap:8px}.drive input{flex:1}
+.gantt{padding:24px 24px 40px}
+.gantt .hd{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
+.g-alert{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding:12px 16px;border-radius:var(--r);background:rgba(255,107,94,.08);border:1px solid rgba(255,107,94,.25);color:#ffb3ab;font-size:13.5px}
+.g-grid{display:grid;grid-template-columns:170px 250px minmax(0,1fr);align-items:center}
+.g-scale{grid-column:3;position:relative;height:26px;border-bottom:1px solid var(--line);font-size:11.5px;color:var(--dim)}
+.g-scale span{position:absolute;top:4px;transform:translateX(-50%);white-space:nowrap}
+.g-scale span.wk::before{content:"";position:absolute;left:50%;top:18px;height:6px;width:1px;background:var(--line-2)}
+.g-row{display:contents}
+.g-row>*{height:58px;display:flex;align-items:center;border-bottom:1px solid #191919}
+.g-lab{gap:10px;font-weight:500;padding-right:10px}
+.g-lab .dot{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+.g-lab .ck{color:var(--ok)}
+.g-dates{gap:6px;padding-right:16px}
+.g-dates input{height:34px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:#0e0e0e;color:var(--ink);font-size:12.5px;outline:0;width:100%}
+.g-dates input:focus{border-color:#4a4a4a}
+.g-dates .ar{color:var(--dim);flex:none}
+.g-track{position:relative}
+.g-bar{position:absolute;top:50%;height:26px;transform:translateY(-50%);border-radius:8px;background:color-mix(in srgb,var(--c) 26%,#141414);border:1px solid color-mix(in srgb,var(--c) 55%,transparent);display:flex;align-items:center;padding:0 10px;font-size:11.5px;color:var(--ink);white-space:nowrap;overflow:hidden;transition:left .5s var(--ease-out),width .5s var(--ease-out)}
+.g-bar.done{background:color-mix(in srgb,var(--c) 12%,#121212);border-style:dashed;color:var(--mute)}
+.g-bar.cur{box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 20%,transparent)}
+.g-bar.late{border-color:var(--danger);box-shadow:0 0 0 3px rgba(255,107,94,.15)}
+.g-today,.g-dl{position:absolute;top:0;bottom:0;width:1px;pointer-events:none;z-index:2}
+.g-today{background:var(--ink)}
+.g-today::after{content:"Aujourd'hui";position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:10.5px;color:var(--ink);white-space:nowrap;background:var(--bg);padding:0 4px}
+.g-dl{background:repeating-linear-gradient(var(--danger) 0 4px,transparent 4px 8px)}
+.g-body{position:relative;display:contents}
+.g-lines{grid-column:3;grid-row:2 / span 6;position:relative;align-self:stretch;pointer-events:none;z-index:2}
+.danger-zone{margin-top:8px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;color:var(--mute);font-size:12.5px}
+@media (max-width:1200px){.fiche{grid-template-columns:1fr 1fr}.fiche>.brief{grid-column:1/-1;grid-row:auto}}
+@media (max-width:900px){.fiche{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.g-grid{grid-template-columns:120px minmax(0,1fr)}.g-dates{display:none!important}.g-scale,.g-lines,.g-track{grid-column:2!important}.g-lab{grid-column:1!important}}
+</style>
+</head>
+<body>
+<script>
+K.boot({ active: 'projet', stage: 'projet', needProject: true, render: async ({ view, project: p }) => {
+  const { el, h, icon, esc, $ } = K;
+  K.setCrumbs([{ label: 'Projets', href: 'projets.html' }, { label: p.name }]);
+  const head = K.stageHeader(p, 'projet', { title: p.name, onChange: () => location.reload() });
+  view.append(head);
+
+  /* chiffres clés */
+  const stats = el('div', 'stats'); view.append(stats);
+  const drawStats = () => {
+    const st = K.stage(p.stage), late = K.lateDays(p), dl = K.day(p.deadline), left = dl ? K.diffDays(K.today(), dl) : null;
+    stats.innerHTML =
+      '<div class="card stat"><span class="lab">Étape actuelle</span><b style="color:' + (p.status === 'en_cours' ? st.color : 'var(--ink)') + '">' + esc(p.status === 'en_cours' ? st.label : K.STATUS[p.status]) + '</b></div>' +
+      '<div class="card stat"><span class="lab">Avancement</span><b>' + Math.round(K.progress(p) * 100) + ' %</b><div class="progress"><i style="width:' + Math.round(K.progress(p) * 100) + '%"></i></div></div>' +
+      '<div class="card stat' + (left != null && left < 0 && p.status === 'en_cours' ? ' late' : '') + '"><span class="lab">Deadline</span><b>' + (dl ? esc(K.fmt(dl, { day: 'numeric', month: 'long' })) : '—') + '</b><span class="lab">' + (left == null ? 'À définir' : p.status !== 'en_cours' ? '' : left > 0 ? 'Dans ' + K.plural(left, 'jour', 'jours') : left === 0 ? 'Aujourd\'hui' : 'Dépassée de ' + K.plural(-left, 'jour', 'jours')) + '</span></div>' +
+      '<div class="card stat' + (late ? ' late' : '') + '"><span class="lab">Planning</span><b>' + (p.status !== 'en_cours' ? 'Terminé' : late ? 'Retard ' + late + ' j' : 'Dans les temps') + '</b><span class="lab">' + esc(st.short) + ' jusqu\'au ' + esc(K.fmt(K.plan(p)[p.stage].end)) + '</span></div>';
+  };
+
+  const cols = el('div', 'cols'); view.append(cols);
+
+  /* fiche projet (enregistrement automatique) */
+  const f = el('section', 'card fiche'); f.innerHTML = '<div class="hd"><h2 class="h2">Fiche projet</h2><span class="saved" aria-live="polite"></span></div>';
+  const saved = $('.saved', f);
+  let pending = {}, st;
+  const save = (k, v) => {
+    pending[k] = v; saved.textContent = 'Enregistrement…'; clearTimeout(st);
+    st = setTimeout(async () => {
+      const patch = pending; pending = {};
+      try { const np = await K.db.updateProject(p.id, patch); Object.assign(p, np); saved.textContent = 'Enregistré'; drawStats(); drawGantt(); K.refreshChrome(); if (patch.name) { $('.h1', head).textContent = p.name; K.setCrumbs([{ label: 'Projets', href: 'projets.html' }, { label: p.name }]); } }
+      catch (e) { saved.textContent = ''; K.toast(K.errMsg(e)); }
+    }, 500);
+  };
+  const field = (label, k, type, opts) => {
+    opts = opts || {}; const l = el('label', 'field', label); let i;
+    if (type === 'textarea') { i = el('textarea'); i.rows = 6; } else if (type === 'select') { i = el('select'); opts.options.forEach(o => { const x = el('option', null, o[1]); x.value = o[0]; i.append(x); }); } else { i = el('input'); i.type = type || 'text'; }
+    if (opts.ph) i.placeholder = opts.ph; i.value = p[k] == null ? '' : p[k];
+    i.addEventListener(type === 'select' || type === 'date' ? 'change' : 'input', () => { let v = i.value; if (type === 'number') v = v === '' ? null : Number(v); if (type === 'date') v = v || null; if (k === 'name' && !v.trim()) return; save(k, typeof v === 'string' && type !== 'textarea' ? v.trim() : v); });
+    l.append(i); return l;
+  };
+  f.append(field('Nom du projet', 'name', 'text'), field('Client', 'client', 'text', { ph: 'Ex. Teya' }));
+  f.append(field('Type', 'type', 'select', { options: K.TYPES.map(t => [t.k, t.label]) }), field('Statut', 'status', 'select', { options: Object.entries(K.STATUS) }), field('Deadline', 'deadline', 'date'), field('Budget (€ HT)', 'budget', 'number', { ph: 'Ex. 4500' }));
+  const dl = field('Dossier Google Drive', 'drive_url', 'url', { ph: 'https://drive.google.com/…' }); const di = $('input', dl); const dw = el('div', 'drive'); dw.append(di);
+  const open = el('a', 'ibtn k-sq'); open.target = '_blank'; open.rel = 'noopener'; open.title = 'Ouvrir le dossier'; open.setAttribute('aria-label', 'Ouvrir le dossier Drive'); open.innerHTML = icon('external-link', 17);
+  const syncOpen = () => { const ok = /^https?:\/\//.test(di.value.trim()); open.href = ok ? di.value.trim() : '#'; open.style.visibility = ok ? 'visible' : 'hidden'; }; di.addEventListener('input', syncOpen); syncOpen();
+  dw.append(open); dl.append(dw); f.append(dl);
+  const bf = field('Brief', 'brief', 'textarea', { ph: 'Intention, ton, livrables, formats, contraintes…' }); bf.classList.add('brief'); f.append(bf);
+  const dz = el('div', 'danger-zone'); dz.innerHTML = '<span>Créé le ' + esc(new Date(p.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })) + '</span>';
+  const del = el('button', 'btn sm danger'); del.type = 'button'; del.innerHTML = icon('trash-2', 15) + '<span>Supprimer</span>';
+  del.onclick = async () => { if (!await K.confirm('Supprimer « ' + p.name + ' » ?', 'Le projet, ses vidéos de review, son storyboard, ses tâches et ses liens de stockage seront supprimés définitivement. Pour garder une trace, passe-le plutôt en « Archivé ».', 'Supprimer définitivement')) return; try { await K.db.deleteProject(p.id); K.store.set('kroma-last-project', ''); location.href = 'projets.html'; } catch (e) { K.toast(K.errMsg(e)); } };
+  dz.append(del); f.append(dz);
+
+  /* timeline (Gantt des 6 étapes) */
+  const g = el('section', 'card gantt'); g.id = 'timeline';
+  cols.append(g, f);
+  const drawGantt = () => {
+    const plan = K.plan(p); const cur = K.stage(p.stage);
+    g.textContent = '';
+    const hd = el('div', 'hd'); hd.innerHTML = '<div><h2 class="h2">Timeline</h2><div class="lab" style="margin-top:4px">Dates proposées selon le type et la deadline : ajuste-les librement.</div></div>';
+    const rc = el('button', 'btn sm'); rc.type = 'button'; rc.innerHTML = icon('rotate-ccw', 15) + '<span>Recalculer depuis la deadline</span>';
+    rc.onclick = async () => {
+      if (!p.deadline) { K.toast('Indique d\'abord une deadline dans la fiche.'); return; }
+      if (!await K.dialog({ title: 'Recalculer le planning ?', text: 'Les dates des 6 étapes seront réparties d\'aujourd\'hui jusqu\'à la deadline. Les étapes déjà validées gardent leur date de validation.', ok: 'Recalculer' })) return;
+      const np = K.defaultPlan(K.iso(K.today()), p.deadline, p.type); K.STAGES.forEach(s => { if (plan[s.k] && plan[s.k].done) { np[s.k] = Object.assign({}, plan[s.k]); } });
+      save('stage_dates', np); p.stage_dates = np; drawGantt();
+    };
+    hd.append(rc); g.append(hd);
+    const late = K.lateDays(p);
+    if (late) g.append(h('<div class="g-alert">' + icon('triangle-alert', 17) + '<span>« ' + esc(cur.label) + ' » devait se terminer le ' + esc(K.fmt(plan[p.stage].end, { day: 'numeric', month: 'long' })) + ' : <b>' + K.plural(late, 'jour', 'jours') + ' de retard</b>. Valide l\'étape ou décale les dates.</span></div>'));
+    const all = K.STAGES.flatMap(s => [plan[s.k].start, plan[s.k].end]).concat([p.deadline, K.iso(K.today())]).filter(Boolean).map(K.day);
+    let min = new Date(Math.min(...all)), max = new Date(Math.max(...all)); min = K.addDays(min, -1); max = K.addDays(max, 2);
+    const span = Math.max(1, K.diffDays(min, max));
+    const pos = d => (K.diffDays(min, K.day(d)) / span * 100);
+    const grid = el('div', 'g-grid');
+    const sc = el('div', 'g-scale'); const step = span > 60 ? 14 : span > 24 ? 7 : span > 10 ? 3 : 1;
+    for (let i = 0; i <= span; i += step) { const d = K.addDays(min, i); const s = el('span', 'wk', K.fmt(d)); s.style.left = (i / span * 100) + '%'; sc.append(s); }
+    grid.append(el('div'), el('div'), sc);
+    K.STAGES.forEach(s => {
+      const gr = String(s.i + 2);
+      const r = plan[s.k] || {}; const done = !!r.done || p.status !== 'en_cours' || s.i < cur.i; const isCur = p.status === 'en_cours' && s.k === p.stage;
+      const row = el('div', 'g-row'); row.style.setProperty('--c', s.color);
+      const lab = el('div', 'g-lab'); lab.innerHTML = '<span class="dot"></span><span>' + esc(s.label) + '</span>' + (done ? '<span class="ck">' + icon('check', 15) + '</span>' : '');
+      const dates = el('div', 'g-dates');
+      const mk = (k) => { const i = el('input'); i.type = 'date'; i.value = r[k] || ''; i.setAttribute('aria-label', s.label + (k === 'start' ? ' : début' : ' : fin')); i.onchange = () => { if (!i.value) { i.value = r[k]; return; } const np = JSON.parse(JSON.stringify(plan)); np[s.k][k] = i.value; if (np[s.k].end < np[s.k].start) { if (k === 'start') np[s.k].end = i.value; else np[s.k].start = i.value; } p.stage_dates = np; save('stage_dates', np); drawGantt(); drawStats(); }; return i; };
+      dates.append(mk('start'), h('<span class="ar">' + icon('arrow-right', 14) + '</span>'), mk('end'));
+      const tr = el('div', 'g-track');
+      const lateHere = isCur && K.lateDays(p) > 0;
+      const bar = el('div', 'g-bar' + (done ? ' done' : '') + (isCur ? ' cur' : '') + (lateHere ? ' late' : ''));
+      const l = pos(r.start), w = Math.max(1.2, pos(K.iso(K.addDays(K.day(r.end), 1))) - l);
+      bar.style.left = l + '%'; bar.style.width = w + '%';
+      const n = K.diffDays(K.day(r.start), K.day(r.end)) + 1; bar.textContent = K.plural(n, 'jour', 'jours'); bar.title = s.label + ' : ' + K.fmt(r.start) + ' → ' + K.fmt(r.end);
+      tr.append(bar); [lab, dates, tr].forEach((x, j) => { x.style.gridRow = gr; x.style.gridColumn = String(j + 1); }); row.append(lab, dates, tr); grid.append(row);
+    });
+    const lines = el('div', 'g-lines'); lines.style.gridRow = '2 / span ' + K.STAGES.length;
+    const t = el('div', 'g-today'); t.style.left = pos(K.iso(K.today())) + '%'; lines.append(t);
+    if (p.deadline) { const d = el('div', 'g-dl'); d.style.left = pos(K.iso(K.addDays(K.day(p.deadline), 1))) + '%'; d.title = 'Deadline ' + K.fmt(p.deadline); lines.append(d); }
+    grid.append(lines);
+    g.append(grid);
+  };
+  drawStats(); drawGantt();
+  if (location.hash === '#timeline') setTimeout(() => g.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+} });
+</script>
+</body>
+</html>

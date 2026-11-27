@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Kroma — Timeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.js"></script>
+<script src="app.js"></script>
+<style>
+.tl-top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin:12px 0 26px}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;margin-bottom:28px}
+.wd{padding:14px;min-height:118px;display:flex;flex-direction:column;gap:8px}
+.wd.today{border-color:#3a3a3a;background:var(--surface-2)}
+.wd .d{display:flex;justify-content:space-between;color:var(--mute);font-size:12.5px}
+.wd .d b{color:var(--ink);font-weight:600;font-size:15px}
+.ev{display:flex;flex-direction:column;gap:2px;padding:7px 9px;border-radius:8px;background:color-mix(in srgb,var(--c) 14%,#151515);border-left:2px solid var(--c);font-size:12px;line-height:1.3}
+.ev:hover{background:color-mix(in srgb,var(--c) 22%,#151515)}
+.ev b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev span{color:var(--mute)}
+.ev.dl{--c:var(--danger)}
+.gl{padding:22px 24px 40px}
+.gl .hd{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.lg{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--mute);font-size:12px}
+.lg span{display:flex;align-items:center;gap:6px}.lg i{width:8px;height:8px;border-radius:2px;background:var(--c)}
+.gg{display:grid;grid-template-columns:240px minmax(0,1fr)}
+.gg .sc{grid-column:2;position:relative;height:26px;border-bottom:1px solid var(--line);font-size:11.5px;color:var(--dim)}
+.gg .sc span{position:absolute;top:4px;transform:translateX(-50%);white-space:nowrap}
+.gr{display:contents}
+.gr>*{height:62px;display:flex;align-items:center;border-bottom:1px solid #191919}
+.gr .nm{flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;padding-right:12px}
+.gr .nm b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.gr .nm span{color:var(--mute);font-size:12px}
+.gr .tk{position:relative}
+.seg{position:absolute;top:50%;height:22px;transform:translateY(-50%);background:color-mix(in srgb,var(--c) 30%,#141414);border-top:1px solid color-mix(in srgb,var(--c) 60%,transparent);border-bottom:1px solid color-mix(in srgb,var(--c) 60%,transparent)}
+.seg:first-child{border-radius:7px 0 0 7px;border-left:1px solid color-mix(in srgb,var(--c) 60%,transparent)}
+.seg.last{border-radius:0 7px 7px 0;border-right:1px solid color-mix(in srgb,var(--c) 60%,transparent)}
+.seg.done{opacity:.45}
+.seg.cur{background:color-mix(in srgb,var(--c) 55%,#141414);height:26px}
+.seg.late{box-shadow:0 0 0 2px var(--danger)}
+.gr a.tk:hover .seg{filter:brightness(1.2)}
+.ln{grid-column:2;position:relative;pointer-events:none;z-index:2}
+.ln .td{position:absolute;top:0;bottom:0;width:1px;background:var(--ink)}
+.ln .td::after{content:"Aujourd'hui";position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:10.5px;white-space:nowrap;background:var(--bg);padding:0 4px}
+.dlm{position:absolute;top:50%;width:2px;height:34px;transform:translate(-1px,-50%);background:var(--danger);border-radius:1px}
+@media (max-width:900px){.week{grid-template-columns:1fr}.wd{min-height:0}.gg{grid-template-columns:130px minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<script>
+K.boot({ active: 'timeline', render: async ({ view }) => {
+  const { el, h, icon, esc } = K;
+  K.setCrumbs([{ label: 'Timeline' }]);
+  let showDone = K.store.get('kroma-tl-done', '0') === '1';
+  const top = el('div', 'tl-top');
+  top.append(h('<div><div class="lab">Tous les projets</div><h1 class="h1" style="margin-top:8px">Timeline</h1></div>'));
+  const tg = el('button', 'btn'); tg.type = 'button'; top.append(tg);
+  view.append(top);
+  const wk = el('section'), gl = el('section', 'card gl'); view.append(wk, gl);
+  const draw = () => {
+    tg.innerHTML = icon(showDone ? 'check' : 'archive', 16) + '<span>' + (showDone ? 'Livrés affichés' : 'Afficher les livrés') + '</span>';
+    const list = K.state.projects.filter(p => p.status === 'en_cours' || (showDone && p.status === 'livre')).sort((a, b) => String(a.deadline || '9999').localeCompare(String(b.deadline || '9999')));
+    /* cette semaine */
+    wk.textContent = ''; wk.append(h('<h2 class="h2" style="margin-bottom:14px">Cette semaine</h2>'));
+    const [a] = K.weekRange(); const grid = el('div', 'week'); const t0 = K.iso(K.today());
+    for (let i = 0; i < 7; i++) {
+      const d = K.addDays(a, i), di = K.iso(d); const c = el('div', 'card wd' + (di === t0 ? ' today' : ''));
+      c.append(h('<div class="d"><span>' + esc(d.toLocaleDateString('fr-FR', { weekday: 'short' })) + '</span><b>' + d.getDate() + '</b></div>'));
+      K.state.projects.filter(p => p.status === 'en_cours').forEach(p => {
+        const plan = K.plan(p);
+        if (p.deadline === di) { const e = el('a', 'ev dl'); e.href = 'projet.html?p=' + p.id + '#timeline'; e.innerHTML = '<b>' + esc(p.name) + '</b><span>Deadline</span>'; c.append(e); }
+        K.STAGES.forEach(s => { if (plan[s.k] && plan[s.k].end === di && !(s.k === 'stockage' && p.deadline === di) && s.i >= K.stage(p.stage).i) { const e = el('a', 'ev'); e.style.setProperty('--c', s.color); e.href = K.stageUrl(s.k, p.id); e.innerHTML = '<b>' + esc(p.name) + '</b><span>Fin ' + esc(s.short) + '</span>'; c.append(e); } });
+      });
+      grid.append(c);
+    }
+    wk.append(grid);
+    /* Gantt global */
+    gl.textContent = '';
+    const hd = el('div', 'hd'); hd.append(h('<h2 class="h2">Planning</h2>'));
+    const lg = el('div', 'lg'); K.STAGES.forEach(s => lg.append(h('<span style="--c:' + s.color + '"><i></i>' + esc(s.short) + '</span>'))); hd.append(lg); gl.append(hd);
+    if (!list.length) { gl.append(h('<div class="empty"><b>Aucun projet en cours.</b>Crée un projet depuis l\'accueil pour le voir ici.</div>')); return; }
+    const dates = list.flatMap(p => { const pl = K.plan(p); return [pl.projet.start, pl.stockage.end, p.deadline]; }).concat([K.iso(K.addDays(K.today(), -3)), K.iso(K.addDays(K.today(), 14))]).filter(Boolean).map(K.day);
+    let min = new Date(Math.min(...dates)), max = new Date(Math.max(...dates)); min = K.addDays(min, -1); max = K.addDays(max, 2);
+    const span = Math.max(1, K.diffDays(min, max)); const pos = s => K.diffDays(min, K.day(s)) / span * 100;
+    const gg = el('div', 'gg'); const sc = el('div', 'sc'); const step = span > 120 ? 28 : span > 60 ? 14 : 7;
+    for (let i = 0; i <= span; i += step) { const s = el('span', null, K.fmt(K.addDays(min, i))); s.style.left = i / span * 100 + '%'; sc.append(s); }
+    gg.append(el('div'), sc);
+    list.forEach((p, ri) => {
+      const pl = K.plan(p), cur = K.stage(p.stage), late = K.lateDays(p);
+      const r = el('div', 'gr');
+      const nm = el('a', 'nm'); nm.href = 'projet.html?p=' + p.id + '#timeline'; nm.innerHTML = '<b>' + esc(p.name) + '</b><span>' + esc([p.client, p.status === 'en_cours' ? cur.short : K.STATUS[p.status]].filter(Boolean).join(' · ')) + (late ? ' · <span style="color:var(--danger)">+' + late + ' j</span>' : '') + '</span>';
+      const tk = el('a', 'tk'); tk.href = K.stageUrl(p.status === 'en_cours' ? p.stage : 'projet', p.id); tk.title = 'Ouvrir ' + p.name;
+      K.STAGES.forEach((s, i) => { const x = pl[s.k]; if (!x) return; const seg = el('div', 'seg' + (i === K.STAGES.length - 1 ? ' last' : '') + (p.status !== 'en_cours' || s.i < cur.i ? ' done' : '') + (p.status === 'en_cours' && s.k === p.stage ? ' cur' : '') + (p.status === 'en_cours' && s.k === p.stage && late ? ' late' : '')); seg.style.setProperty('--c', s.color); const l = pos(x.start); seg.style.left = l + '%'; seg.style.width = Math.max(.4, pos(K.iso(K.addDays(K.day(x.end), 1))) - l) + '%'; seg.title = s.label + ' : ' + K.fmt(x.start) + ' → ' + K.fmt(x.end); tk.append(seg); });
+      if (p.deadline) { const m = el('div', 'dlm'); m.style.left = pos(K.iso(K.addDays(K.day(p.deadline), 1))) + '%'; m.title = 'Deadline ' + K.fmt(p.deadline); tk.append(m); }
+      nm.style.gridRow = tk.style.gridRow = String(ri + 2); nm.style.gridColumn = '1'; tk.style.gridColumn = '2';
+      r.append(nm, tk); gg.append(r);
+    });
+    const ln = el('div', 'ln'); ln.style.gridRow = '2 / span ' + list.length; const td = el('div', 'td'); td.style.left = pos(K.iso(K.today())) + '%'; ln.append(td); gg.append(ln);
+    gl.append(gg);
+  };
+  tg.onclick = () => { showDone = !showDone; K.store.set('kroma-tl-done', showDone ? '1' : '0'); draw(); };
+  draw();
+} });
+</script>
+</body>
+</html>

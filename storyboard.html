@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Kroma — Storyboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.js"></script>
+<script src="app.js"></script>
+<style>
+.sb-sum{display:flex;flex-wrap:wrap;gap:10px;margin:-8px 0 24px}
+.frames{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.fr{display:flex;flex-direction:column;overflow:hidden;animation:k-rise .55s var(--ease-out) both}
+.fr .img{position:relative;aspect-ratio:16/9;background:#101010;border-bottom:1px solid var(--line);display:grid;place-items:center;color:var(--dim);cursor:pointer;overflow:hidden}
+.fr .img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.fr .img .add{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:12.5px;text-align:center;padding:0 20px}
+.fr .img.drag{outline:2px dashed var(--c-storyboard);outline-offset:-8px}
+.fr .img .over{position:absolute;inset:auto 8px 8px auto;display:flex;gap:6px;opacity:0;transition:opacity .2s}
+.fr:hover .img .over,.fr .img:focus-within .over{opacity:1}
+.fr .img .over .ibtn{width:32px;height:32px;background:rgba(10,10,10,.75);backdrop-filter:blur(8px);color:var(--ink)}
+.fr .num{position:absolute;left:10px;top:10px;height:24px;min-width:34px;padding:0 8px;border-radius:999px;background:rgba(10,10,10,.75);backdrop-filter:blur(8px);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.fr .bd{display:flex;flex-direction:column;gap:10px;padding:14px}
+.fr textarea{width:100%;min-height:78px;padding:10px 12px;border:1px solid transparent;border-radius:var(--r-sm);background:#0f0f0f;color:var(--ink);resize:vertical;outline:0;line-height:1.5;font-size:13.5px}
+.fr textarea:focus{border-color:#3a3a3a}
+.fr textarea::placeholder{color:var(--dim)}
+.fr .ft{display:flex;align-items:center;gap:6px}
+.fr .dur{display:flex;align-items:center;gap:6px;height:32px;padding:0 4px 0 10px;border:1px solid var(--line);border-radius:999px;color:var(--mute);font-size:12.5px}
+.fr .dur input{width:46px;border:0;background:none;outline:0;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.fr .ft .sp{flex:1}
+.fr .ft .ibtn{width:32px;height:32px}
+.cmt-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 11px;border:0;border-radius:999px;background:none;color:var(--mute);cursor:pointer;font-size:12.5px}
+.cmt-btn:hover,.cmt-btn.on{background:var(--surface-2);color:var(--ink)}
+.cmt-btn .n.open{color:var(--c-storyboard)}
+.thread{display:flex;flex-direction:column;gap:10px;padding:12px 14px 14px;border-top:1px solid var(--line);background:#111}
+.cm{display:flex;flex-direction:column;gap:3px;font-size:13px;line-height:1.45}
+.cm .who{display:flex;align-items:center;gap:8px;color:var(--mute);font-size:12px}
+.cm .who b{color:var(--ink);font-weight:500}
+.cm .who .cl{color:var(--c-storyboard)}
+.cm .who .sp{flex:1}
+.cm .who button{border:0;background:none;color:var(--dim);cursor:pointer;padding:0;font-size:12px}
+.cm .who button:hover{color:var(--ink)}
+.cm.resolved{opacity:.45}
+.cm.resolved .tx{text-decoration:line-through}
+.cin{display:flex;gap:6px}
+.cin input{flex:1;height:36px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:#0b0b0b;outline:0}
+.cin input:focus{border-color:#3a3a3a}
+.cin .ibtn{width:36px;height:36px;background:var(--ink);color:#0a0a0a}
+.addfr{min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border:1px dashed var(--line-2);border-radius:var(--r-lg);background:none;color:var(--mute);cursor:pointer;transition:border-color .2s,color .2s,background .2s}
+.addfr:hover{border-color:#444;color:var(--ink);background:var(--surface)}
+.share-link{display:flex;gap:8px}.share-link input{flex:1}
+/* vue client */
+.cl-top{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px;padding:0 24px;background:rgba(10,10,10,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.cl-top .logo{height:13px;width:auto}
+.cl-wrap{max-width:1280px;margin:0 auto;padding:36px 24px 100px}
+.cl-name{display:flex;align-items:center;gap:8px;color:var(--mute);font-size:13px}
+.cl-name input{height:34px;width:180px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);outline:0}
+@media (max-width:560px){.frames{grid-template-columns:1fr}.cl-top{padding:0 14px}.cl-name span{display:none}}
+</style>
+</head>
+<body>
+<script>
+(() => {
+const TOKEN = K.params.get('s');
+const { el, h, icon, esc, $, $$ } = K;
+const total = fr => fr.reduce((a, f) => a + (+f.duration || 0), 0);
+const mmss = s => { s = Math.round(s); return s < 60 ? s + ' s' : Math.floor(s / 60) + ' min ' + String(s % 60).padStart(2, '0') + ' s'; };
+const IMG_OK = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+/* fil de commentaires d'une frame (studio ou client) */
+function thread(box, frame, all, mode, onSend, onChange) {
+  box.textContent = '';
+  const list = all.filter(c => c.frame_id === frame.id);
+  if (!list.length) box.append(el('div', 'lab', mode === 'client' ? 'Pas encore de commentaire sur ce plan.' : 'Aucun commentaire pour l\'instant.'));
+  list.forEach(c => {
+    const d = el('div', 'cm' + (c.resolved ? ' resolved' : ''));
+    const w = el('div', 'who'); w.innerHTML = '<b>' + esc(c.author || (c.author_kind === 'client' ? 'Client' : 'Studio')) + '</b>' + (c.author_kind === 'client' ? '<span class="cl">client</span>' : '') + '<span>' + esc(K.ago(c.created_at)) + '</span><span class="sp"></span>';
+    if (mode === 'studio') {
+      const r = el('button', null, c.resolved ? 'Rouvrir' : 'Résolu'); r.type = 'button'; r.onclick = async () => { try { await K.db.updateFrameComment(c.id, { resolved: !c.resolved }); c.resolved = !c.resolved; onChange(); } catch (e) { K.toast(K.errMsg(e)); } };
+      const x = el('button', null, 'Supprimer'); x.type = 'button'; x.onclick = async () => { try { await K.db.deleteFrameComment(c.id); all.splice(all.indexOf(c), 1); onChange(); } catch (e) { K.toast(K.errMsg(e)); } };
+      w.append(r, x);
+    }
+    d.append(w, el('div', 'tx', c.body)); box.append(d);
+  });
+  const f = el('form', 'cin'); const i = el('input'); i.placeholder = mode === 'client' ? 'Votre commentaire sur ce plan…' : 'Ajouter un commentaire…'; i.maxLength = 4000; i.setAttribute('aria-label', 'Commentaire');
+  const b = el('button', 'ibtn'); b.type = 'submit'; b.setAttribute('aria-label', 'Envoyer'); b.innerHTML = icon('arrow-up', 16); f.append(i, b);
+  f.onsubmit = async e => { e.preventDefault(); const v = i.value.trim(); if (!v) return; b.disabled = true; try { const c = await onSend(v); all.push(c); onChange(true); } catch (x) { K.toast(K.errMsg(x)); b.disabled = false; } };
+  box.append(f);
+}
+function cmtLabel(btn, frame, all) { const l = all.filter(c => c.frame_id === frame.id), open = l.filter(c => !c.resolved).length; btn.innerHTML = icon('message-square', 15) + '<span class="n' + (open ? ' open' : '') + '">' + (l.length ? l.length : '') + '</span>'; btn.title = l.length ? K.plural(l.length, 'commentaire', 'commentaires') + (open ? ' (' + open + ' ouvert' + (open > 1 ? 's' : '') + ')' : '') : 'Commenter'; }
+
+/* ---------- vue client (lien de partage, sans compte) ---------- */
+async function client() {
+  document.title = 'Storyboard — Kroma';
+  const top = el('header', 'cl-top'); top.innerHTML = K.logo();
+  const nm = el('label', 'cl-name'); nm.innerHTML = '<span>Votre nom</span>'; const ni = el('input'); ni.placeholder = 'Prénom'; ni.maxLength = 80; ni.value = K.store.get('kroma-client-name', ''); ni.oninput = () => K.store.set('kroma-client-name', ni.value.trim()); nm.append(ni); top.append(nm);
+  const wrap = el('main', 'cl-wrap'); document.body.append(top, wrap);
+  let data = null; try { data = await K.db.shareStoryboard(TOKEN); } catch (e) { data = null; }
+  if (!data || !data.project) { wrap.append(h('<div class="empty"><b>Ce lien n\'est plus disponible.</b>Demandez un nouveau lien au studio.</div>')); return; }
+  const P = data.project, frames = data.frames || [], comments = data.comments || [];
+  wrap.append(h('<div class="k-stage"><div class="who"><div class="lab"><span class="badge" style="color:var(--c-storyboard)"><span class="dot"></span>Storyboard</span>' + (P.client ? '<span>' + esc(P.client) + '</span>' : '') + '</div><h1 class="h1">' + esc(P.name) + '</h1></div></div>'));
+  wrap.append(h('<div class="sb-sum"><span class="badge">' + K.plural(frames.length, 'plan', 'plans') + '</span><span class="badge">Durée totale ' + mmss(total(frames)) + '</span><span class="badge">Commentez chaque plan, le studio est notifié.</span></div>'));
+  if (!frames.length) { wrap.append(h('<div class="empty"><b>Le storyboard est en préparation.</b>Revenez un peu plus tard.</div>')); return; }
+  const g = el('div', 'frames'); wrap.append(g);
+  frames.forEach((f, i) => {
+    const c = el('article', 'card fr'); c.style.animationDelay = Math.min(i, 12) * 40 + 'ms';
+    const im = el('div', 'img'); im.style.cursor = 'default'; im.innerHTML = '<span class="num">' + String(i + 1).padStart(2, '0') + '</span>' + (f.image ? '<img alt="" loading="lazy" src="' + esc(K.publicUrl(f.image)) + '">' : '<div class="add">' + icon('image', 22) + '</div>');
+    const bd = el('div', 'bd'); bd.append(h('<div style="white-space:pre-line;line-height:1.55;font-size:13.5px">' + (esc(f.body) || '<span class="dim">—</span>') + '</div>'));
+    const ft = el('div', 'ft'); ft.append(h('<span class="dur">' + icon('clock', 14) + '<span style="color:var(--ink)">' + (+f.duration || 0) + ' s</span></span>'), el('span', 'sp'));
+    const cb = el('button', 'cmt-btn on'); cb.type = 'button'; ft.append(cb); bd.append(ft);
+    const th = el('div', 'thread');
+    const redraw = (sent) => { cmtLabel(cb, f, comments); thread(th, f, comments, 'client', v => K.db.shareStoryboardComment(TOKEN, f.id, v, ni.value.trim() || 'Client'), redraw); if (sent) { K.toast('Commentaire envoyé au studio'); $('input', th).focus(); } };
+    cb.onclick = () => { th.hidden = !th.hidden; cb.classList.toggle('on', !th.hidden); };
+    c.append(im, bd, th); g.append(c); redraw();
+  });
+}
+
+/* ---------- vue studio ---------- */
+function studio() {
+  K.boot({ active: 'storyboard', stage: 'storyboard', needProject: true, render: async ({ view, project: p }) => {
+    K.setCrumbs([{ label: 'Projets', href: 'projets.html' }, { label: p.name, href: 'projet.html?p=' + p.id }, { label: 'Storyboard' }]);
+    const share = el('button', 'btn'); share.type = 'button'; share.innerHTML = icon('share-2', 16) + '<span>Partager au client</span>';
+    const add = el('button', 'btn'); add.type = 'button'; add.innerHTML = icon('plus', 16) + '<span>Plan</span>';
+    view.append(K.stageHeader(p, 'storyboard', { actions: [share, add] }));
+    const sum = el('div', 'sb-sum'); const g = el('div', 'frames'); view.append(sum, g);
+    let frames = await K.db.frames(p.id); let comments = await K.db.frameComments(frames.map(f => f.id));
+    const drawSum = () => { const open = comments.filter(c => !c.resolved).length; sum.innerHTML = '<span class="badge">' + K.plural(frames.length, 'plan', 'plans') + '</span><span class="badge">' + icon('clock', 13) + 'Durée totale ' + mmss(total(frames)) + '</span>' + (open ? '<span class="badge" style="color:var(--c-storyboard)">' + K.plural(open, 'commentaire ouvert', 'commentaires ouverts') + '</span>' : ''); };
+    share.onclick = () => {
+      if (!p.storyboard_token) { K.toast('Lance migration-v2.sql pour activer le partage.'); return; }
+      const link = location.origin + location.pathname + '?s=' + p.storyboard_token;
+      const d = el('dialog', 'k-dlg k-scope'); d.innerHTML = '<div class="in"><h2>Lien de partage du storyboard</h2><p>Toute personne qui a ce lien peut voir le storyboard et commenter chaque plan, sans créer de compte.</p><div class="share-link"><input class="input" readonly></div><div class="acts"><button class="btn ghost" type="button" data-x>Fermer</button><button class="btn primary" type="button" data-c>Copier le lien</button></div></div>';
+      document.body.append(d); const inp = $('input', d); inp.value = link; d.showModal(); inp.select();
+      $('[data-x]', d).onclick = () => d.close(); d.addEventListener('close', () => d.remove());
+      $('[data-c]', d).onclick = async () => { try { await navigator.clipboard.writeText(link); } catch (e) { inp.select(); document.execCommand('copy'); } K.toast('Lien copié'); d.close(); };
+    };
+    const saveT = {};
+    const patch = (f, k, v) => { f[k] = v; clearTimeout(saveT[f.id + k]); saveT[f.id + k] = setTimeout(() => K.db.updateFrame(f.id, { [k]: v }).catch(e => K.toast(K.errMsg(e))), 450); if (k === 'duration') drawSum(); };
+    const upload = async (f, file, box) => {
+      if (!file || !IMG_OK.includes(file.type)) { K.toast('Formats acceptés : JPG, PNG, WebP, GIF.'); return; }
+      if (file.size > 10 * 1024 * 1024) { K.toast('Image trop lourde (10 Mo maximum).'); return; }
+      box.classList.add('skel');
+      try { const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, ''); const path = 'storyboard/' + p.id + '/' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7) + '.' + ext; await K.db.upload(path, file); const old = f.image; f.image = path; await K.db.updateFrame(f.id, { image: path }); if (old && !/^https?:/.test(old)) K.db.removeFiles([old]).catch(() => { }); draw(); }
+      catch (e) { K.toast(K.errMsg(e)); box.classList.remove('skel'); }
+    };
+    const move = async (f, dir) => { const i = frames.indexOf(f), j = i + dir; if (j < 0 || j >= frames.length) return; [frames[i], frames[j]] = [frames[j], frames[i]]; frames.forEach((x, k) => x.position = k); draw(); try { await Promise.all([K.db.updateFrame(frames[i].id, { position: i }), K.db.updateFrame(frames[j].id, { position: j })]); } catch (e) { K.toast(K.errMsg(e)); } };
+    const openThreads = new Set();
+    const draw = () => {
+      drawSum(); g.textContent = '';
+      frames.forEach((f, i) => {
+        const c = el('article', 'card fr'); c.style.animationDelay = Math.min(i, 12) * 30 + 'ms';
+        const im = el('div', 'img'); im.tabIndex = 0; im.setAttribute('role', 'button'); im.setAttribute('aria-label', 'Image du plan ' + (i + 1));
+        im.innerHTML = '<span class="num">' + String(i + 1).padStart(2, '0') + '</span>' + (f.image ? '<img alt="" loading="lazy" src="' + esc(K.publicUrl(f.image)) + '">' : '<div class="add">' + icon('upload', 22) + '<span>Glisse une image, colle-la (Cmd+V) ou clique</span></div>');
+        const fi = el('input'); fi.type = 'file'; fi.accept = IMG_OK.join(','); fi.hidden = true; im.append(fi);
+        const over = el('div', 'over'); const lk = el('button', 'ibtn'); lk.type = 'button'; lk.title = 'Image depuis un lien'; lk.setAttribute('aria-label', 'Image depuis un lien'); lk.innerHTML = icon('link', 15);
+        lk.onclick = async e => { e.stopPropagation(); const v = await K.dialog({ title: 'Image depuis un lien', fields: [{ k: 'url', label: 'Adresse de l\'image', type: 'url', value: /^https?:/.test(f.image) ? f.image : '', placeholder: 'https://…', required: true }], ok: 'Utiliser' }); if (v && /^https?:\/\//.test(v.url.trim())) { f.image = v.url.trim(); K.db.updateFrame(f.id, { image: f.image }).catch(x => K.toast(K.errMsg(x))); draw(); } };
+        over.append(lk); if (f.image) { const rm = el('button', 'ibtn'); rm.type = 'button'; rm.title = 'Retirer l\'image'; rm.setAttribute('aria-label', 'Retirer l\'image'); rm.innerHTML = icon('x', 15); rm.onclick = e => { e.stopPropagation(); const old = f.image; f.image = ''; K.db.updateFrame(f.id, { image: '' }).catch(x => K.toast(K.errMsg(x))); if (old && !/^https?:/.test(old)) K.db.removeFiles([old]).catch(() => { }); draw(); }; over.append(rm); }
+        im.append(over);
+        im.onclick = () => fi.click(); im.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); } };
+        fi.onchange = () => upload(f, fi.files[0], im);
+        im.ondragover = e => { e.preventDefault(); im.classList.add('drag'); }; im.ondragleave = () => im.classList.remove('drag');
+        im.ondrop = e => { e.preventDefault(); im.classList.remove('drag'); const file = e.dataTransfer.files[0]; if (file) upload(f, file, im); };
+        im.addEventListener('paste', e => { const it = [...(e.clipboardData.items || [])].find(x => x.type.startsWith('image/')); if (it) { e.preventDefault(); upload(f, it.getAsFile(), im); } });
+        const bd = el('div', 'bd');
+        const ta = el('textarea'); ta.placeholder = 'Action à l\'image, voix off, texte à l\'écran…'; ta.value = f.body || ''; ta.maxLength = 4000; ta.setAttribute('aria-label', 'Texte du plan ' + (i + 1)); ta.oninput = () => patch(f, 'body', ta.value);
+        const ft = el('div', 'ft');
+        const du = el('label', 'dur'); du.innerHTML = icon('clock', 14); const dn = el('input'); dn.type = 'number'; dn.min = '0'; dn.max = '3600'; dn.step = '0.5'; dn.value = +f.duration || 0; dn.setAttribute('aria-label', 'Durée du plan en secondes'); dn.oninput = () => { const v = Math.max(0, Math.min(3600, parseFloat(dn.value) || 0)); patch(f, 'duration', v); }; du.append(dn, el('span', null, 's'));
+        const cb = el('button', 'cmt-btn'); cb.type = 'button';
+        const up = el('button', 'ibtn'); up.type = 'button'; up.title = 'Avancer'; up.setAttribute('aria-label', 'Déplacer le plan avant'); up.innerHTML = icon('chevron-left', 16); up.disabled = i === 0; up.onclick = () => move(f, -1);
+        const dn2 = el('button', 'ibtn'); dn2.type = 'button'; dn2.title = 'Reculer'; dn2.setAttribute('aria-label', 'Déplacer le plan après'); dn2.innerHTML = icon('chevron-right', 16); dn2.disabled = i === frames.length - 1; dn2.onclick = () => move(f, 1);
+        const del = el('button', 'ibtn'); del.type = 'button'; del.title = 'Supprimer le plan'; del.setAttribute('aria-label', 'Supprimer le plan'); del.innerHTML = icon('trash-2', 15);
+        del.onclick = async () => { if (!await K.confirm('Supprimer le plan ' + (i + 1) + ' ?', 'Son image, son texte et ses commentaires seront supprimés.')) return; try { await K.db.deleteFrame(f.id); if (f.image && !/^https?:/.test(f.image)) K.db.removeFiles([f.image]).catch(() => { }); frames.splice(frames.indexOf(f), 1); comments = comments.filter(c => c.frame_id !== f.id); draw(); } catch (e) { K.toast(K.errMsg(e)); } };
+        ft.append(du, cb, el('span', 'sp'), up, dn2, del); bd.append(ta, ft);
+        const th = el('div', 'thread'); th.hidden = !openThreads.has(f.id);
+        const redraw = (sent) => { cmtLabel(cb, f, comments); drawSum(); thread(th, f, comments, 'studio', v => K.db.addFrameComment({ frame_id: f.id, body: v, author: K.firstName(K.state.me, K.state.me.email) || 'Studio', author_kind: 'studio' }), redraw); if (sent) $('input', th).focus(); };
+        cb.onclick = () => { th.hidden = !th.hidden; cb.classList.toggle('on', !th.hidden); if (th.hidden) openThreads.delete(f.id); else { openThreads.add(f.id); $('input', th).focus(); } };
+        cb.classList.toggle('on', !th.hidden);
+        c.append(im, bd, th); g.append(c); redraw();
+      });
+      const a = el('button', 'addfr'); a.type = 'button'; a.innerHTML = icon('plus', 22) + '<span>Ajouter un plan</span>'; a.onclick = addFrame; g.append(a);
+    };
+    const addFrame = async () => { try { const f = await K.db.addFrame({ project_id: p.id, position: frames.length, duration: 3 }); frames.push(f); draw(); const last = $$('.fr textarea', g).pop(); if (last) last.focus(); } catch (e) { K.toast(K.errMsg(e)); } };
+    add.onclick = addFrame;
+    draw();
+    if (K.db.subscribe) K.db.subscribe('storyboard_comments', null, async () => { try { comments = await K.db.frameComments(frames.map(f => f.id)); draw(); } catch (e) { } });
+  } });
+}
+if (TOKEN) client(); else studio();
+})();
+</script>
+</body>
+</html>
